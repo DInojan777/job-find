@@ -121,7 +121,7 @@ class ValidateRequest():
         self.request_serializer=request_serializer
 
     def employee_company_info(self):
-        return self.request_info=['company_info']
+        return self.request_info['company_info']
 
     def employee_personal_info(self):
         employee_personal_info= UserPersonalInfo.objects.get(user=self.request_info['user'])
