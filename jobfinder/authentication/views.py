@@ -6,10 +6,11 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
 from .response_serializers import *
+from .request_serializers import *
 from users.models import *
 from .model_helper import *
 
-class RegiterUser(APIView):
+class RegiterJobSeeker(APIView):
 
     authentication_classes = []
     permission_classes = []
@@ -19,11 +20,12 @@ class RegiterUser(APIView):
 
         username = data['email']
         if User.objects.filter(username=username).exists():
-             return Response(get_validation_failure_response("User with this email already exists"))
+             return Response(get_validation_failure_response("job seekser with this email already exists"))
         if getuser_by_mobile(data['mobile_number']) is not None:
-                    return Response(get_validation_failure_response(None, "User with mobile number already exist"))
+                    return Response(get_validation_failure_response(None, "Job seeker with mobile number already exist"))
 
-        user = User(username=data['email'], email=data['email'], password=data['email']+'@123')
+        user = User(username=data['email'], email=data['email'])
+        user.password=data['password']
         user.first_name = data['first_name']
         user.last_name = data['last_name']
         user.save()
@@ -34,16 +36,25 @@ class RegiterUser(APIView):
         userPersonalInfo=UserPersonalInfo.objects.create(user=user,**data_user)
         userPersonalInfo.save()
 
-        user_authe={}
-        user_authe['is_client']=data['is_client']
-        user_authe['is_contractor']=data['is_contractor']
-        user_authe['is_job_seeker']=data['is_job_seeker']
-        userAuthentication=UserAuthentication.objects.create(user=user,**user_authe)
+        userAuthentication=UserAuthentication.objects.create(user=user)
+        userAuthentication.is_job_seeker=True
         userAuthentication.is_active=True
         userAuthentication.save()
 
         token=get_user_token(user.username)
 
-        response={'success':True,'token':token,'message':"User Registered Successfully"}
+        response={'success':True,'token':token,'message':"Job seeker Registered Successfully"}
+
+        return Response (get_success_response("Job seeker Registered Successfully",details=response))
+    
+# class RegiterClientAndContractor(APIView):
+      
+#     authentication_classes = []
+#     permission_classes = []
+
+#     def post(self, request, format=None):
+#         data = request.data
         
-        return Response (get_success_response("User Registered Successfully",details=response))
+#         validateRequest=ValidateRequest(
+#               request=request, request_serializer=RegisterCompanySerializer)
+        

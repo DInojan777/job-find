@@ -4,9 +4,6 @@ import uuid
 import random
 import string
 
-
-
-
 class BaseModelMixin(models.Model):
 
     created_message = "Details created successfully"
@@ -58,7 +55,6 @@ class BaseModelMixin(models.Model):
         abstract = True
         ordering = ['-created_at']
 
-
 class AppBaseConfig(BaseModelMixin):
     current_version_android = models.CharField(
         max_length=8, null=True, blank=True)
@@ -81,11 +77,11 @@ class UserAuthentication(BaseModelMixin):
     mobile_otp = models.CharField(max_length=8, null=True, blank=True)
     otp_expiry = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=False)
-    # is_admin = models.BooleanField(default=False)
+    is_admin = models.BooleanField(default=False)
     is_client = models.BooleanField(default=False)
     is_contractor = models.BooleanField(default=False)
     is_job_seeker= models.BooleanField(default=True)
-    # is_super_admin = models.BooleanField(default=False)
+    is_super_admin = models.BooleanField(default=False)
     is_guest=models.BooleanField(default=False)
     is_login_action = models.BooleanField(default=False)
     is_otp_verified = models.BooleanField(default=False)
