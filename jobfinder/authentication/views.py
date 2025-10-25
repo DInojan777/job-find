@@ -10,7 +10,7 @@ from .request_serializers import *
 from users.models import *
 from .model_helper import *
 
-class RegiterJobSeeker(APIView):
+class RegisterJobSeeker(APIView):
 
     authentication_classes = []
     permission_classes = []
@@ -41,13 +41,31 @@ class RegiterJobSeeker(APIView):
         userAuthentication.is_active=True
         userAuthentication.save()
 
+        company_meta={}
+        company_meta['brand_name']='job seeker company'
+        company_meta['display_name']='job seeker company'
+        company_meta['type_is_provider']=False
+        company_meta['is_active']=True
+        companyMetaInfo=CompanyMeta.objects.create(**company_meta)
+        companyMetaInfo.save()
+
+        userDesignation=UserDesignation.objects.create(
+               company=companyMetaInfo, name=userAuthentication.admin_registration_designation , is_admin=True)
+        
+        employee_id = random.randint(1000, 9999)
+        form_employee_company_info = {}
+        form_employee_company_info['employee_id'] = employee_id
+
+        EmployeeCompanyInfo.objects.create(
+              user=user, designation=userDesignation, company=companyMetaInfo, authentication=userAuthentication, **form_employee_company_info)
+
         token=get_user_token(user.username)
 
         response={'success':True,'token':token,'message':"Job seeker Registered Successfully"}
 
         return Response (get_success_response("Job seeker Registered Successfully",details=response))
     
-class RegiterClientAndContractor(APIView):
+class RegisterClientAndContractor(APIView):
       
     authentication_classes = []
     permission_classes = []
