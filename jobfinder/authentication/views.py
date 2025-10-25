@@ -83,7 +83,7 @@ class RegiterClientAndContractor(APIView):
         company_cont['district']=data['district']
         company_cont['state']=data['state']
         company_cont['pincode']=data['pincode']
-        # company_cont['country']=data['country']
+        company_cont['country']=data['country']
         companyContactInfo=CompanyContactInfo.objects.create(**company_cont)
         companyContactInfo.save()
 
