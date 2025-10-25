@@ -7,6 +7,8 @@ from company.models import *
 class UserDesignation(BaseModelMixin):
     name = models.CharField(max_length=220, null=True, blank=True)
     tag = models.CharField(max_length=220, null=True, blank=True)
+    company = models.ForeignKey(CompanyMeta, on_delete=models.CASCADE, null=True, blank=True)
+    company_branch = models.ForeignKey(CompanyBranchInfo, on_delete=models.SET_NULL, null=True, blank=True)
     is_admin = models.BooleanField(default=False)
     is_job_seeker=models.BooleanField(default=False)
 

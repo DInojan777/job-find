@@ -47,14 +47,82 @@ class RegiterJobSeeker(APIView):
 
         return Response (get_success_response("Job seeker Registered Successfully",details=response))
     
-# class RegiterClientAndContractor(APIView):
+class RegiterClientAndContractor(APIView):
       
-#     authentication_classes = []
-#     permission_classes = []
+    authentication_classes = []
+    permission_classes = []
 
-#     def post(self, request, format=None):
-#         data = request.data
+    def post(self, request, format=None):
+        data = request.data
+
+        username = data['email']
+        if User.objects.filter(username=username).exists():
+             return Response(get_validation_failure_response("job seekser with this email already exists"))
+        if getuser_by_mobile(data['mobile_number_01']) is not None:
+                    return Response(get_validation_failure_response(None, "Job seeker with mobile number already exist"))
+
+        user = User(username=data['email'], email=data['email'])
+        user.password=data['password']
+        user.first_name = data['first_name']
+        user.last_name = data['last_name']
+        user.save()
+
+        company_meta={}
+        company_meta['brand_name']=data['brand_name']
+        company_meta['display_name']=data['display_name']
+        company_meta['type_is_provider']=data['type_is_provider']
+        company_meta['is_active']=False
+        companyMetaInfo=CompanyMeta.objects.create(**company_meta)
+        companyMetaInfo.save()
+
+        company_cont={}
+        company_cont['address_id']=data['address_id']
+        company_cont['mobile_number_01']=data['mobile_number_01']
+        company_cont['communication_address']=data['communication_address']
+        company_cont['city']=data['city']
+        company_cont['district']=data['district']
+        company_cont['state']=data['state']
+        company_cont['pincode']=data['pincode']
+        company_cont['country']=data['country']
+        companyContactInfo=CompanyContactInfo.objects.create(**company_cont)
+        companyContactInfo.save()
+
+        form_company_branch = {}
+        form_company_branch['name'] = company_meta['brand_name']
+        form_company_branch['display_name'] = company_meta['brand_name']
+        form_company_branch['is_parent'] = True
+        form_company_branch['is_active'] = True
+        companyBranchInfo=CompanyBranchInfo.objects.create(
+              company= companyMetaInfo, company_contact=companyContactInfo, **form_company_branch)
+
+        auth_info={}
+        auth_info['is_client']=data['is_client']
+        auth_info['is_contractor']=data['is_contractor']
+        userAuthentication=UserAuthentication.objects.create(
+              user=user, **auth_info)
+        userAuthentication.is_active=True
+        userAuthentication.is_job_seeker=False
+        userAuthentication.save()
+
+        user_personal_info={}
+        user_personal_info['gender']=data['gender']
+        user_personal_info['mobile_number']=data['mobile_number']
+        user_personal_info['dob']=data['dob']
+        UserPersonalInfo.objects.create(
+              user=user, authentication=userAuthentication, **user_personal_info)
+
+        userDesignation=UserDesignation.objects.create(
+               company=companyMetaInfo, company_branch=companyBranchInfo, name=userAuthentication.admin_registration_designation , is_admin=True)
         
-#         validateRequest=ValidateRequest(
-#               request=request, request_serializer=RegisterCompanySerializer)
-        
+        employee_id = random.randint(1000, 9999)
+        form_employee_company_info = {}
+        form_employee_company_info['employee_id'] = employee_id
+
+        EmployeeCompanyInfo.objects.create(
+              user=user, designation=userDesignation, company=companyMetaInfo, company_branch=companyBranchInfo, authentication=userAuthentication, **form_employee_company_info)
+
+        token=get_user_token(user.username)
+
+        response={'success':True,'token':token,'message':" Registered Successfully"}
+
+        return Response (get_success_response(" Registered Successfully",details=response))

@@ -26,6 +26,23 @@ def getuser_by_mobile(username):
         return ep.user
     except:
         return None
+
+def get_object_by_pk(model, pk):
+    try:
+        return model.objects.get(pk=pk)
+    except:
+        return None
+
+def get_user_from_request(request_info, data):
+    user = request_info['user']
+    if 'user_id' in data:
+        try:
+            employeeCompanyInfo = get_object_by_pk(
+                EmployeeCompanyInfo, data['user_id'])
+            user = employeeCompanyInfo.user
+        except:
+            pass
+    return user
     
 def get_user_company_from_user(user):
 
@@ -134,6 +151,7 @@ class ValidateRequest():
                 user=self.request_info['user'])
             return userAuthentication.is_admin
         return False
+    
     def is_valid_user(self):
         if self.request_info['company_info']:
             return True
