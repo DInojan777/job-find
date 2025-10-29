@@ -193,3 +193,13 @@ class ValidateRequest():
         
     def errors_formatted(self):
         return "Invalid Request Info"
+    
+def get_auth_info(token_key):
+    try:
+        token = Token.objects.get(key=token_key)
+        employee_info = EmployeeCompanyInfo.objects.filter(user=token.user).first()
+        if employee_info:
+            return employee_info.authentication
+        return None
+    except Token.DoesNotExist:
+        return None

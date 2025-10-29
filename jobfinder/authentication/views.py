@@ -9,6 +9,8 @@ from .response_serializers import *
 from .request_serializers import *
 from users.models import *
 from .model_helper import *
+from django.contrib.auth import authenticate, login
+
 
 class RegisterJobSeeker(APIView):
 
@@ -78,7 +80,7 @@ class RegisterClientAndContractor(APIView):
              return Response(get_validation_failure_response("job seekser with this email already exists"))
         if getuser_by_mobile(data['mobile_number_01']) is not None:
                     return Response(get_validation_failure_response(None, "Job seeker with mobile number already exist"))
-
+        
         user = User(username=data['email'], email=data['email'])
         user.password=data['password']
         user.first_name = data['first_name']
@@ -87,21 +89,21 @@ class RegisterClientAndContractor(APIView):
 
         company_meta={}
         company_meta['brand_name']=data['brand_name']
-        company_meta['display_name']=data['display_name']
-        company_meta['type_is_provider']=data['type_is_provider']
-        company_meta['is_active']=False
+      #   company_meta['display_name']=data['display_name']
+      #   company_meta['type_is_provider']=data['type_is_provider']
+        company_meta['is_active']=True
         companyMetaInfo=CompanyMeta.objects.create(**company_meta)
         companyMetaInfo.save()
 
         company_cont={}
         company_cont['address_id']=data['address_id']
         company_cont['mobile_number_01']=data['mobile_number_01']
-        company_cont['communication_address']=data['communication_address']
-        company_cont['city']=data['city']
-        company_cont['district']=data['district']
-        company_cont['state']=data['state']
-        company_cont['pincode']=data['pincode']
-        company_cont['country']=data['country']
+      #   company_cont['communication_address']=data['communication_address']
+      #   company_cont['city']=data['city']
+      #   company_cont['district']=data['district']
+      #   company_cont['state']=data['state']
+      #   company_cont['pincode']=data['pincode']
+      #   company_cont['country']=data['country']
         companyContactInfo=CompanyContactInfo.objects.create(**company_cont)
         companyContactInfo.save()
 
@@ -144,3 +146,62 @@ class RegisterClientAndContractor(APIView):
         response={'success':True,'token':token,'message':" Registered Successfully"}
 
         return Response (get_success_response(" Registered Successfully",details=response))
+    
+class MemberLoginUsingPassword(APIView):
+      
+      authentication_classes=[]
+      permission_classes=[]
+      
+
+      def post(self,request,formate=None):
+            data=request.data
+            print("data================>",data)
+
+            if 'email' in data:
+                  email= data['email']
+                  email=email.lower()
+            else:
+                  email=None
+            if 'mobile_number' in data:
+                  mobile_number= data['mobile_number']
+                  print(mobile_number)
+            else:
+                  mobile_number= None
+            password = data['password']
+            print("received password ============>",password)
+            if not password:
+                 return Response(get_validation_failure_response([],"Password is required"))
+
+            try:
+                  user = User.objects.filter(email=email).first()
+                  print("email user==========>",user)
+            except User.DoesNotExist:
+                  try:
+                        user = UserPersonalInfo.objects.get(mobile_number = mobile_number).user
+                        user = user.email
+                        print("mobile number===========>",user)
+                  except:
+                        user = None
+
+            if user is not None:
+                  emp_is_active = EmployeeCompanyInfo.objects.get(user=user).is_active
+                  if emp_is_active == False :
+                        return Response(get_validation_failure_response([], "Your account is deactivated. Please contact your administrator."))
+                  
+                  employeeCompanyInfo=EmployeeCompanyInfo.objects.get(user=user)
+                  company_status = employeeCompanyInfo.company.is_active
+                  print("111111=========>")
+                  if company_status == True:
+                        print("222222222=========>")
+                        if user is not None:
+                              # login(request, user)
+                              token_obj,created= Token.objects.get_or_create(user=user)
+                              token_key=token_obj.key
+                              print("token========>",token_obj)
+                              return Response(get_success_response(token_key))
+                        else:
+                               return Response(get_validation_failure_response([], "Invalid Login Credentials"))
+                  else:
+                        return Response(get_validation_failure_response([], "Your account activation is in progress. You will receive an email notification upon activation. Please check back in some time."))
+            else:
+                  return Response(get_validation_failure_response([], "Invalid Login Credentials"))
