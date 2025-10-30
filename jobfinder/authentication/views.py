@@ -147,61 +147,60 @@ class RegisterClientAndContractor(APIView):
 
         return Response (get_success_response(" Registered Successfully",details=response))
     
+
+    
 class MemberLoginUsingPassword(APIView):
       
       authentication_classes=[]
       permission_classes=[]
       
 
-      def post(self,request,formate=None):
+      def post(self,request,format=None):
             data=request.data
-            print("data================>",data)
+            email = data.get('email', None)
+            mobile_number = data.get('mobile_number', None)
+            password = data.get('password', None)
 
-            if 'email' in data:
-                  email= data['email']
-                  email=email.lower()
-            else:
-                  email=None
-            if 'mobile_number' in data:
-                  mobile_number= data['mobile_number']
-                  print(mobile_number)
-            else:
-                  mobile_number= None
-            password = data['password']
-            print("received password ============>",password)
+            print("data================>",data)
             if not password:
                  return Response(get_validation_failure_response([],"Password is required"))
+            
+            print("received password ============>",password)
+            
+            if not mobile_number:
+                  return Response(get_validation_failure_response([], "Mobile number or email is required"))
+            
+            upi = None
+            if mobile_number:
+                  upi = UserPersonalInfo.objects.filter(mobile_number=mobile_number).first()
+                  print("received number ============>",mobile_number,upi.user)
+            if email:
+                  upi = User.objects.filter(user__email=email.lower()).first()
+                  print("received email ============>",user)
 
-            try:
-                  user = User.objects.filter(email=email).first()
-                  print("email user==========>",user)
-            except User.DoesNotExist:
-                  try:
-                        user = UserPersonalInfo.objects.get(mobile_number = mobile_number).user
-                        user = user.email
-                        print("mobile number===========>",user)
-                  except:
-                        user = None
+            if not upi:
+                  return Response(get_validation_failure_response([], "Invalid user"))
 
-            if user is not None:
-                  emp_is_active = EmployeeCompanyInfo.objects.get(user=user).is_active
-                  if emp_is_active == False :
-                        return Response(get_validation_failure_response([], "Your account is deactivated. Please contact your administrator."))
-                  
-                  employeeCompanyInfo=EmployeeCompanyInfo.objects.get(user=user)
-                  company_status = employeeCompanyInfo.company.is_active
-                  print("111111=========>")
-                  if company_status == True:
-                        print("222222222=========>")
-                        if user is not None:
-                              # login(request, user)
-                              token_obj,created= Token.objects.get_or_create(user=user)
-                              token_key=token_obj.key
-                              print("token========>",token_obj)
-                              return Response(get_success_response(token_key))
-                        else:
-                               return Response(get_validation_failure_response([], "Invalid Login Credentials"))
-                  else:
-                        return Response(get_validation_failure_response([], "Your account activation is in progress. You will receive an email notification upon activation. Please check back in some time."))
-            else:
-                  return Response(get_validation_failure_response([], "Invalid Login Credentials"))
+            user = upi.user
+
+            if upi.user.password==data["password"]:
+                  token=Token.objects.get(user=upi.user).key
+                  print("=========================================pass=========")
+                  return Response(get_success_response(message="password matched",details=token))
+      
+            
+            emp_info = EmployeeCompanyInfo.objects.filter(user=user).first()
+            if emp_info and not emp_info.is_active:
+                  print("############################")
+                  return Response(get_validation_failure_response([], "Your account is deactivated. Please contact your administrator."))
+
+            if emp_info and not emp_info.company.is_active:
+                  return Response(get_validation_failure_response([], "Your account activation is in progress. You will receive an email notification upon activation."))
+
+            # success - generate token
+            token_obj, created = Token.objects.get_or_create(user=user)
+            return Response(get_success_response(details=token_obj.key))
+
+
+
+

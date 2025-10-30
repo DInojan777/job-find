@@ -203,3 +203,63 @@ def get_auth_info(token_key):
         return None
     except Token.DoesNotExist:
         return None
+    
+
+# class MemberLoginUsingPassword(APIView):
+      
+#       authentication_classes=[]
+#       permission_classes=[]
+      
+
+#       def post(self,request,formate=None):
+#             data=request.data
+#             print("data================>",data)
+
+#             if 'email' in data:
+#                   email= data['email']
+#                   email=email.lower()
+#             else:
+#                   email=None
+#             if 'mobile_number' in data:
+#                   mobile_number= data['mobile_number']
+#                   print(mobile_number)
+#             else:
+#                   mobile_number= None
+#             password = data['password']
+#             print("received password ============>",password)
+#             if not password:
+#                  return Response(get_validation_failure_response([],"Password is required"))
+
+#             try:
+#                   user = User.objects.filter(email=email).first()
+#                   print("email user==========>",user)
+#             except User.DoesNotExist:
+#                   try:
+#                         user = UserPersonalInfo.objects.get(mobile_number = mobile_number).user
+#                         user = user.email
+#                         print("mobile number===========>",user)
+#                   except:
+#                         user = None
+
+#             if user is not None:
+#                   emp_is_active = EmployeeCompanyInfo.objects.get(user=user).is_active
+#                   if emp_is_active == False :
+#                         return Response(get_validation_failure_response([], "Your account is deactivated. Please contact your administrator."))
+                  
+#                   employeeCompanyInfo=EmployeeCompanyInfo.objects.get(user=user)
+#                   company_status = employeeCompanyInfo.company.is_active
+#                   print("111111=========>")
+#                   if company_status == True:
+#                         print("222222222=========>")
+#                         if user is not None:
+#                               # login(request, user)
+#                               token_obj,created= Token.objects.get_or_create(user=user)
+#                               token_key=token_obj.key
+#                               print("token========>",token_obj)
+#                               return Response(get_success_response(token_key))
+#                         else:
+#                                return Response(get_validation_failure_response([], "Invalid Login Credentials"))
+#                   else:
+#                         return Response(get_validation_failure_response([], "Your account activation is in progress. You will receive an email notification upon activation. Please check back in some time."))
+#             else:
+#                   return Response(get_validation_failure_response([], "Invalid Login Credentials"))
