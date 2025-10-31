@@ -89,8 +89,8 @@ class RegisterClientAndContractor(APIView):
 
         company_meta={}
         company_meta['brand_name']=data['brand_name']
-      #   company_meta['display_name']=data['display_name']
-      #   company_meta['type_is_provider']=data['type_is_provider']
+        company_meta['display_name']=data['display_name']
+        company_meta['type_is_provider']=data['type_is_provider']
         company_meta['is_active']=True
         companyMetaInfo=CompanyMeta.objects.create(**company_meta)
         companyMetaInfo.save()
@@ -98,12 +98,12 @@ class RegisterClientAndContractor(APIView):
         company_cont={}
         company_cont['address_id']=data['address_id']
         company_cont['mobile_number_01']=data['mobile_number_01']
-      #   company_cont['communication_address']=data['communication_address']
-      #   company_cont['city']=data['city']
-      #   company_cont['district']=data['district']
-      #   company_cont['state']=data['state']
-      #   company_cont['pincode']=data['pincode']
-      #   company_cont['country']=data['country']
+        company_cont['communication_address']=data['communication_address']
+        company_cont['city']=data['city']
+        company_cont['district']=data['district']
+        company_cont['state']=data['state']
+        company_cont['pincode']=data['pincode']
+        company_cont['country']=data['country']
         companyContactInfo=CompanyContactInfo.objects.create(**company_cont)
         companyContactInfo.save()
 
@@ -153,7 +153,6 @@ class MemberLoginUsingPassword(APIView):
       
       authentication_classes=[]
       permission_classes=[]
-      
 
       def post(self,request,format=None):
             data=request.data
@@ -164,30 +163,29 @@ class MemberLoginUsingPassword(APIView):
             print("data================>",data)
             if not password:
                  return Response(get_validation_failure_response([],"Password is required"))
-            
             print("received password ============>",password)
-            
-            if not mobile_number:
+            if not email and not mobile_number:
+                  print("+++++++++++++++++++++++++++++++")
                   return Response(get_validation_failure_response([], "Mobile number or email is required"))
-            
-            upi = None
-            if mobile_number:
-                  upi = UserPersonalInfo.objects.filter(mobile_number=mobile_number).first()
-                  print("received number ============>",mobile_number,upi.user)
+            print("---------------------------------")
+          
+            user = None
+            # Email login
             if email:
-                  upi = User.objects.filter(user__email=email.lower()).first()
-                  print("received email ============>",user)
-
-            if not upi:
+                  user = User.objects.filter(email=email.lower()).first()
+                  print("received email ============>", email, "user==========>", user)
+            # Mobile login
+            elif mobile_number:
+                  upi = UserPersonalInfo.objects.filter(mobile_number=mobile_number).first()
+                  if upi:
+                        user = upi.user
+                  print("received number ============>", mobile_number, "user==========>", user)
+            else:
                   return Response(get_validation_failure_response([], "Invalid user"))
 
-            user = upi.user
-
-            if upi.user.password==data["password"]:
-                  token=Token.objects.get(user=upi.user).key
-                  print("=========================================pass=========")
-                  return Response(get_success_response(message="password matched",details=token))
-      
+            if user.password != data["password"]:
+                  print("*********************** password mismatched *************************")
+                  return Response(get_validation_failure_response([], "Invalid user credentials"))
             
             emp_info = EmployeeCompanyInfo.objects.filter(user=user).first()
             if emp_info and not emp_info.is_active:
@@ -197,10 +195,9 @@ class MemberLoginUsingPassword(APIView):
             if emp_info and not emp_info.company.is_active:
                   return Response(get_validation_failure_response([], "Your account activation is in progress. You will receive an email notification upon activation."))
 
-            # success - generate token
-            token_obj, created = Token.objects.get_or_create(user=user)
-            return Response(get_success_response(details=token_obj.key))
-
+            token=Token.objects.get(user=user).key
+            print("=========================================pass=========")
+            return Response(get_success_response(message="password matched",details=token))
 
 
 
