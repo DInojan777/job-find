@@ -134,3 +134,7 @@ REST_FRAMEWORK = {
     ]
 }
 
+# settings.py
+# SMS_THAI_SENDER = "this is {company}"            # what shows as sender id for SMS
+# SMS_THAI_OTP_TEMPLATE = "Hi {NAME}, your OTP is {OTP}"   # template for message
+# SMS_THAI_API_KEY = "your_sms_gateway_api_key_here"

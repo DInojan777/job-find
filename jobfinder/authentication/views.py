@@ -10,6 +10,8 @@ from .request_serializers import *
 from users.models import *
 from .model_helper import *
 from django.contrib.auth import authenticate, login
+from django.utils.timezone import now
+
 
 
 class RegisterJobSeeker(APIView):
@@ -67,6 +69,8 @@ class RegisterJobSeeker(APIView):
 
         return Response (get_success_response("Job seeker Registered Successfully",details=response))
     
+# ========================================================================================================================
+
 class RegisterClientAndContractor(APIView):
       
     authentication_classes = []
@@ -147,6 +151,7 @@ class RegisterClientAndContractor(APIView):
 
         return Response (get_success_response(" Registered Successfully",details=response))
     
+# ========================================================================================================================
 
     
 class MemberLoginUsingPassword(APIView):
@@ -182,12 +187,33 @@ class MemberLoginUsingPassword(APIView):
                   print("received number ============>", mobile_number, "user==========>", user)
             else:
                   return Response(get_validation_failure_response([], "Invalid user"))
+            
+            emp_info = EmployeeCompanyInfo.objects.filter(user=user).first()
 
             if user.password != data["password"]:
                   print("*********************** password mismatched *************************")
-                  return Response(get_validation_failure_response([], "Invalid user credentials"))
+                  # return Response(get_validation_failure_response([], "Invalid user credentials"))
+            # send an OTP to user's mobile or email
+                  if email:
+                        otp = str((random.randint(1000,9999)))
+                        authentication = emp_info.authentication
+                        authentication.mobile_otp = otp
+                        print("&&&&&&&&&&&&&&&&&&&&&&&",otp)
+                        authentication.save()
+                        return Response(get_success_response(message="password otp send succesfully",details=token))
+                  # send OTP via SMS or email
+                  if mobile_number:
+                        otp = str((random.randint(1000,9999)))
+                        authentication = emp_info.authentication
+                        authentication.mobile_otp = otp
+                        print("&&&&&&&&&&&**************************&&&&&&&&&&&&",otp)
+                        authentication.save()
+                        return Response(get_success_response(message="password otp send succesfully",details=token))
+
+                  else:
+                        return Response(get_validation_failure_response([], "Invalid credentials. OTP sent. Please verify OTP and login again."))
             
-            emp_info = EmployeeCompanyInfo.objects.filter(user=user).first()
+            
             if emp_info and not emp_info.is_active:
                   print("############################")
                   return Response(get_validation_failure_response([], "Your account is deactivated. Please contact your administrator."))
@@ -199,5 +225,6 @@ class MemberLoginUsingPassword(APIView):
             print("=========================================pass=========")
             return Response(get_success_response(message="password matched",details=token))
 
+# ========================================================================================================================
 
 

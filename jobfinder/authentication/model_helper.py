@@ -1,6 +1,9 @@
 from .models import *
 from users.models import *
+from django.conf import settings
 from rest_framework.authtoken.models import Token
+import random
+import string
 
 def get_user_token(username):
     try:
@@ -13,6 +16,15 @@ def get_user_token(username):
             return token.key
     except:
         return None
+    
+def generate_otp(length=4):
+    """Generate a random numeric OTP of given length."""
+    digits = string.digits
+    otp = ''.join(random.choice(digits) for _ in range(length))
+    return otp
+
+
+
 
 def get_active_user(**kargs):
     try:
@@ -203,7 +215,12 @@ def get_auth_info(token_key):
         return None
     except Token.DoesNotExist:
         return None
-    
+
+
+
+
+
+
 
 # class MemberLoginUsingPassword(APIView):
       

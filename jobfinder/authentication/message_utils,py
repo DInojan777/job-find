@@ -1,0 +1,25 @@
+def send_registration_otp(username, email, mobile_number):
+    otp = generate_otp()
+    # Save OTP somewhere (DB, cache) for later verification …
+    if mobile_number:
+        # Prepare SMS for india
+        sender_id = settings.SMS_THAI_SENDER  # e.g. “YourCompany”
+        full_number = "+91" + mobile_number.lstrip("0")  # india country code +66
+        message_template = settings.SMS_THAI_OTP_TEMPLATE
+        message = message_template.replace("{OTP}", otp).replace("{NAME}", username)
+        api_key = settings.SMS_THAI_API_KEY
+        # send via SMS gateway
+        result = sendSMS(api_key, full_number, sender_id, message)
+        print("SMS OTP send result:", result)
+    elif email:
+        subject = "Your OTP Code"
+        message = f"Hi {username},\nYour OTP is: {otp}\nIt will expire in 5 minutes."
+        from_email = settings.DEFAULT_FROM_EMAIL
+        recipient = [email]
+        send_mail(subject, message, from_email, recipient, fail_silently=False)
+        print("Email OTP sent to:", email)
+    else:
+        # Neither mobile nor email provided
+        raise ValueError("Either mobile_number or email must be provided")
+
+    return otp
