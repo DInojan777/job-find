@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import UserAuthentication
 from django.contrib.auth.models import User
+from rest_framework import authentication, permissions
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.models import Token
@@ -10,7 +11,10 @@ from .request_serializers import *
 from users.models import *
 from .model_helper import *
 from django.contrib.auth import authenticate, login
+from datetime import timedelta
+from django.utils import timezone
 from django.utils.timezone import now
+
 
 
 
@@ -160,71 +164,166 @@ class MemberLoginUsingPassword(APIView):
       permission_classes=[]
 
       def post(self,request,format=None):
+
             data=request.data
             email = data.get('email', None)
             mobile_number = data.get('mobile_number', None)
             password = data.get('password', None)
 
-            print("data================>",data)
             if not password:
                  return Response(get_validation_failure_response([],"Password is required"))
-            print("received password ============>",password)
+
             if not email and not mobile_number:
-                  print("+++++++++++++++++++++++++++++++")
                   return Response(get_validation_failure_response([], "Mobile number or email is required"))
-            print("---------------------------------")
+          
+            user = None
+
+            # Email login
+            if email:
+                  user = User.objects.filter(email=email.lower()).first()
+
+            # Mobile login
+            elif mobile_number:
+                  userPersonalInfo = UserPersonalInfo.objects.filter(mobile_number=mobile_number).first()
+                  if userPersonalInfo:
+                        user = userPersonalInfo.user
+
+            else:
+                  return Response(get_validation_failure_response([], "Invalid user"))
+            
+            employeeCompanyInfo = EmployeeCompanyInfo.objects.filter(user=user).first()
+
+            if user.password != data["password"]:
+                  return Response(get_validation_failure_response([], "Invalid user credentials"))
+            
+            if employeeCompanyInfo and not employeeCompanyInfo.is_active:
+                  return Response(get_validation_failure_response([], "Your account is deactivated. Please contact your administrator."))
+
+            if employeeCompanyInfo and not employeeCompanyInfo.company.is_active:
+                  return Response(get_validation_failure_response([], "Your account activation is in progress. You will receive an email notification upon activation."))
+
+            if user is not None:
+                  login(request, user)
+                  token=Token.objects.get(user=user).key
+                  EmployeeCompanyInfo.objects.get(user = user)
+                    
+                  employeeCompanyInfo.custom_field['variant'] = 'admin'
+                  employeeCompanyInfo.save()
+
+                  return Response(get_success_response(message="LoggedIn Successfully",details={"token":token}))
+                    
+            else:
+
+                  return Response(get_validation_failure_response([], "Invalid Login Credentials"))
+            
+
+# ========================================================================================================================
+
+# send an OTP to user's mobile or email
+class SendOtp (APIView):
+
+      authentication_classes=[]
+      permission_classes=[]
+
+      def post(self,request,format=None):
+
+            data=request.data
+            email = data.get('email', None)
+            mobile_number = data.get('mobile_number', None)
+            password = data.get('password', None)
+
+            if not password:
+                 return Response(get_validation_failure_response([],"Password is required"))
+
+            if not email and not mobile_number:
+                  return Response(get_validation_failure_response([], "Mobile number or email is required"))
           
             user = None
             # Email login
             if email:
                   user = User.objects.filter(email=email.lower()).first()
-                  print("received email ============>", email, "user==========>", user)
             # Mobile login
-            elif mobile_number:
-                  upi = UserPersonalInfo.objects.filter(mobile_number=mobile_number).first()
-                  if upi:
-                        user = upi.user
-                  print("received number ============>", mobile_number, "user==========>", user)
+            elif mobile_number:     
+                  userPersonalInfo = UserPersonalInfo.objects.filter(mobile_number=mobile_number).first()
+                  user = userPersonalInfo.user
             else:
                   return Response(get_validation_failure_response([], "Invalid user"))
             
-            emp_info = EmployeeCompanyInfo.objects.filter(user=user).first()
+            employeeCompanyInfo = EmployeeCompanyInfo.objects.filter(user=user).first()
 
             if user.password != data["password"]:
-                  print("*********************** password mismatched *************************")
-                  # return Response(get_validation_failure_response([], "Invalid user credentials"))
-            # send an OTP to user's mobile or email
+                  otp = str((random.randint(1000,9999)))
+                  authentication = employeeCompanyInfo.authentication
+                  authentication.mobile_otp = otp
+                  authentication.otp_expiry = timezone.now() + timedelta(minutes=2)  
+                  authentication.save()
+                  
                   if email:
-                        otp = str((random.randint(1000,9999)))
-                        authentication = emp_info.authentication
-                        authentication.mobile_otp = otp
-                        print("&&&&&&&&&&&&&&&&&&&&&&&",otp)
-                        authentication.save()
-                        return Response(get_success_response(message="password otp send succesfully",details=token))
+                        token=Token.objects.get(user=user).key
+                        return Response(get_success_response(message="OTP sent successfully to your email", details={"otp": otp,"token":token}))
+
                   # send OTP via SMS or email
-                  if mobile_number:
-                        otp = str((random.randint(1000,9999)))
-                        authentication = emp_info.authentication
-                        authentication.mobile_otp = otp
-                        print("&&&&&&&&&&&**************************&&&&&&&&&&&&",otp)
-                        authentication.save()
-                        return Response(get_success_response(message="password otp send succesfully",details=token))
+                  elif mobile_number:
+                        token=Token.objects.get(user=user).key
+                        return Response(get_success_response(message="OTP sent successfully to your mobile number", details={"otp": otp,"token":token}))
 
-                  else:
-                        return Response(get_validation_failure_response([], "Invalid credentials. OTP sent. Please verify OTP and login again."))
-            
-            
-            if emp_info and not emp_info.is_active:
-                  print("############################")
-                  return Response(get_validation_failure_response([], "Your account is deactivated. Please contact your administrator."))
-
-            if emp_info and not emp_info.company.is_active:
-                  return Response(get_validation_failure_response([], "Your account activation is in progress. You will receive an email notification upon activation."))
-
-            token=Token.objects.get(user=user).key
-            print("=========================================pass=========")
-            return Response(get_success_response(message="password matched",details=token))
+            else:
+                  return Response(get_validation_failure_response([], "Invalid user"))
 
 # ========================================================================================================================
 
 
+class Dashboard(APIView):
+    
+      authentication_classes = [authentication.TokenAuthentication]
+      permission_classes = [permissions.IsAuthenticated]
+
+      def post(self, request, format=None):
+
+            data = request.data
+            request_info = get_user_company_from_request(request)
+
+            if request_info['company_info'] is not None:
+                  print("request_info['company_info']=========>",request_info['company_info'])
+
+                  try:
+                        employeeCompanyInfo = EmployeeCompanyInfo.objects.get(
+                        user=request_info['user'])
+
+                        if employeeCompanyInfo.authentication.is_active == False:
+                              return Response(get_validation_failure_response(None, 'Please login to continue'))
+                        
+                  except Exception as e:
+                        return Response(get_validation_failure_response(None, 'Please login to continue'))
+                  
+                  res = get_success_response()
+                  res["success"] = True
+
+                  user_details = {}
+                  user_details["employee_id"] = employeeCompanyInfo.id
+                  user_details["name"] = employeeCompanyInfo.user.first_name
+                  user_details["email"] = employeeCompanyInfo.user.email
+                  user_details["is_active"] = employeeCompanyInfo.authentication.is_active
+                  userPersonalInfo = UserPersonalInfo.objects.get(user=request_info['user'])
+                  user_details["mobile_number"] = userPersonalInfo.mobile_number
+                  user_details["gender"] = userPersonalInfo.gender
+
+                  permission_details = {}
+                  permission_details["is_admin"] = request_info['is_admin']
+                  permission_details["is_contractor"] = request_info['is_contractor']
+                  permission_details["is_client"] = request_info['is_client']
+                  permission_details['is_job_seeker']=request_info['is_job_seeker']
+                  permission_details["is_guest"] =request_info['is_guest']
+                  permission_details["company_branch"] =request_info['company_branch']
+                  permission_details["company_info"] = request_info['company_info']
+
+
+                  dashboard={"user_details": user_details,
+                        "permission_details": permission_details}                        
+                  print("details=====================",dashboard)
+                  return Response(get_success_response(message="your dashboard is"))
+            else:
+                  details = {}
+                  print("details2")
+                  print(details)
+                  return Response(get_validation_failure_response(None, '2Please login to continue'))

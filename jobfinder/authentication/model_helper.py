@@ -55,7 +55,35 @@ def get_user_from_request(request_info, data):
         except:
             pass
     return user
-    
+
+def get_user_company_from_request(request):
+    response = {
+        "user": None,
+        "company_info": None,
+        "is_admin": False,
+        'is_branch_admin': False,
+        "is_super_admin": False,
+        "is_job_seeker": False,
+        "is_contractor": False,
+        "is_client":False,
+
+    }
+    # print("tokensss")
+    try:
+        token = request.META.get('HTTP_AUTHORIZATION')
+        # print("token")
+        # print(token)
+        token = token.replace("Token ", "")
+        # print("token=====>", token)
+        try:
+            user = Token.objects.get(key=token).user
+            response = get_user_company_from_user(user)
+        except:
+            pass
+    except:
+        pass
+    return response
+
 def get_user_company_from_user(user):
 
     response = {
@@ -65,80 +93,135 @@ def get_user_company_from_user(user):
         "is_admin": False,
         'is_branch_admin': False,
         "is_super_admin": False,
-        "is_client": False,
-        "is_contractor": False,
+        "is_guest": False,
         "is_job_seeker": False,
+        "is_contractor": False,
+        "is_client":False,
         'has_company': False,
+        'has_company_branch_location': False,
         'company': None,
         'company_branch': None,
-        'personal_info':None,
+        'company_branch_location': None,
+        'can_update_location': False,
         'photo': None,
         'name': None,
         'mobile_number': None
     }
+
     try:
-        response['user']=user
-        user_auth=get_active_user(user=user)
-        response['is_admin']=user_auth.is_active and user_auth.is_admin
-
+        response['user'] = user
+        user_auth = get_active_user(user=user)
+        response['is_admin'] = user_auth.is_active and user_auth.is_admin
+        response['designation'] = '-'
         try:
-            employee_company_info=EmployeeCompanyInfo.objects.get(
-                user=user)
-            response['company_info']=employee_company_info
-            response['employee_id']=employee_company_info.id
-
+            employee_company_info = EmployeeCompanyInfo.objects.get(user=user)
+            response['company_info'] = employee_company_info.company
+            response['employee_id'] = employee_company_info.id
             try:
-                response['photo']=employee_company_info.photo.url
+                response['photo'] = employee_company_info.photo.url
             except:
                 pass
 
-            response['name']=employee_company_info.user.username
-            response['is_super_admin']=employee_company_info.authentication.is_super_admin
+            response['name'] = employee_company_info.user.username
+            response['is_super_admin'] = employee_company_info.authentication.is_super_admin
+            response['is_job_seeker'] = employee_company_info.authentication.is_job_seeker
+            response['is_guest'] = employee_company_info.authentication.is_guest
+            response['is_contractor'] = employee_company_info.authentication.is_contractor
             response['is_client']=employee_company_info.authentication.is_client
-            response['is_contractor']=employee_company_info.authentication.is_contractor
-            response['is_job_seeker']=employee_company_info.authentication.is_job_seeker
 
-            user_personal_info=UserPersonalInfo.objects.get(
+            employee_personal_info = UserPersonalInfo.objects.get(
                 user=user)
-            response['personal_info']=user_personal_info
-            response['mobile_number']=user_personal_info.mobile_number
+            response['personal_info'] = employee_personal_info
+            response['mobile_number'] = employee_personal_info.mobile_number
 
             try:
-                response['is_branch_admin']=user_auth.is_active and employee_company_info.designation.is_admin
+                response['is_branch_admin'] = user_auth.is_active and employee_company_info.designation.is_admin
                 response['designation'] = employee_company_info.designation.name
             except:
                 pass
+            response['has_company'] = True
+            response['company'] = {
+                "name": employee_company_info.company.brand_name, "id": employee_company_info.company.id, 'type_is_provider': employee_company_info.company.type_is_provider}
+            response['company_branch'] = {
+                "name": employee_company_info.company_branch.name, "id": employee_company_info.company_branch.id}
 
-            response['has_company']=True
-            response['company']={'name':employee_company_info.company.brand_name,'id':employee_company_info.company.id,
-                                'type_is_provider':employee_company_info.company.type_is_provider}
-            
+            response['can_update_location'] = employee_company_info.company_branch.can_update_location
+
+
         except Exception as e:
-            response['has_company']=False
-    except:
-        pass
-    return response
-
-def get_user_company_from_request(request):
-    response={
-        "user":None,
-        "company_info":None,
-        "is_admin":False,
-        "is_client":False,
-        "is_contractor":False,
-        "is_job_seeker":False
-    }
-    try:
-        token=request.Meta.get('HTTP_AUTHORIZATION')
-        token=token.replace("Token","")
-        try:
-            user=Token.objects.get(key=token).user
-            response=get_user_company_from_user(user=user)
-        except:
+            print(e)
+            response['has_company'] = False
             pass
+
     except:
         pass
+
+        print("responseresponseresponseHeader=======================")
+    # print(response)
     return response
+    
+# def get_user_company_from_user(user):
+
+#     response = {
+#         "user": None,
+#         "company_info": None,
+#         "employee_id": None,
+#         "is_admin": False,
+#         'is_branch_admin': False,
+#         "is_super_admin": False,
+#         "is_client": False,
+#         "is_contractor": False,
+#         "is_job_seeker": False,
+#         'has_company': False,
+#         'company': None,
+#         'company_branch': None,
+#         'personal_info':None,
+#         'photo': None,
+#         'name': None,
+#         'mobile_number': None
+#     }
+#     try:
+#         response['user']=user
+#         user_auth=get_active_user(user=user)
+#         response['is_admin']=user_auth.is_active and user_auth.is_admin
+
+#         try:
+#             employee_company_info=EmployeeCompanyInfo.objects.get(
+#                 user=user)
+#             response['company_info']=employee_company_info
+#             response['employee_id']=employee_company_info.id
+
+#             try:
+#                 response['photo']=employee_company_info.photo.url
+#             except:
+#                 pass
+
+#             response['name']=employee_company_info.user.username
+#             response['is_super_admin']=employee_company_info.authentication.is_super_admin
+#             response['is_client']=employee_company_info.authentication.is_client
+#             response['is_contractor']=employee_company_info.authentication.is_contractor
+#             response['is_job_seeker']=employee_company_info.authentication.is_job_seeker
+
+#             user_personal_info=UserPersonalInfo.objects.get(
+#                 user=user)
+#             response['personal_info']=user_personal_info
+#             response['mobile_number']=user_personal_info.mobile_number
+
+#             try:
+#                 response['is_branch_admin']=user_auth.is_active and employee_company_info.designation.is_admin
+#                 response['designation'] = employee_company_info.designation.name
+#             except:
+#                 pass
+
+#             response['has_company']=True
+#             response['company']={'name':employee_company_info.company.brand_name,'id':employee_company_info.company.id,
+#                                 'type_is_provider':employee_company_info.company.type_is_provider}
+            
+#         except Exception as e:
+#             response['has_company']=False
+#     except:
+#         pass
+#     return response
 
 class ValidateRequest():
 
