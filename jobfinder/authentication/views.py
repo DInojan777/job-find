@@ -314,14 +314,13 @@ class Dashboard(APIView):
                   permission_details["is_client"] = request_info['is_client']
                   permission_details['is_job_seeker']=request_info['is_job_seeker']
                   permission_details["is_guest"] =request_info['is_guest']
-                  permission_details["company_branch"] =request_info['company_branch']
-                  permission_details["company_info"] = request_info['company_info']
-
+                  # permission_details["company_branch"] =request_info['company_branch']
+                  # permission_details["company_info"] = request_info['company_info'].company.id
 
                   dashboard={"user_details": user_details,
                         "permission_details": permission_details}                        
                   print("details=====================",dashboard)
-                  return Response(get_success_response(message="your dashboard is"))
+                  return Response(get_success_response(message="your dashboard is",details=dashboard))
             else:
                   details = {}
                   print("details2")
