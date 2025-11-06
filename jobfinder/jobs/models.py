@@ -33,7 +33,7 @@ class JobLocationInfo(BaseModelMixin):
     google_place_link = models.CharField(max_length=220, null=True, blank=True)
 
 class Joblist(BaseModelMixin):
-
+    
     description=models.CharField(max_length=220, null=True, blank=True)
     reference_no=models.CharField(max_length=8, null=True, blank=True)
     vacancies=models.CharField(max_length=8, null=True, blank=True)

@@ -8,40 +8,47 @@ from .models import *
 from authentication.response_serializers import *
 from .serializers import *
 
-class CreateJob(APIView):
+class CreateJobDetails(APIView):
+
     authentication_classes = []
     permission_classes = []
 
     def post(self, request, format=None):
         data = request.data
 
-        crt_job={}
-        crt_job['description']=data['description']
-        crt_job['vacancies']=data['vacancies']
-        crt_job['reference_no']=data['reference_no']
-        crt_job['budget']=data['budget']
-        # crt_job['expried_date']=data['expried_date']
+        provider_info_id = data.get('provider_info_id')
+        joblist_data = data.get('joblist', [])
 
-        job_cont={}
-        job_cont['mobile_number_01']=data['mobile_number_01']
-        job_cont['address_line_01']=data['address_line_01']
-        job_cont['communication_address']=data['communication_address']
-        job_cont['city']=data['city']
-        job_cont['district']=data['district']
-        job_cont['state']=data['state']
-        job_cont['pincode']=data['pincode']
-        job_cont['country']=data['country']
+        if not provider_info_id:
+            return Response(get_validation_failure_response([], "provider_info_id is required"))
+        if not joblist_data:
+            return Response(get_validation_failure_response([], "joblist data is required"))
 
-        jobLocationInfo=JobLocationInfo.objects.create(**job_cont)        
-        job=Joblist.objects.create(**crt_job,location=jobLocationInfo)
-        job.save()
+        try:
+            provider_info = EmployeeCompanyInfo.objects.get(id=provider_info_id)
+        except EmployeeCompanyInfo.DoesNotExist:
+            return Response(get_validation_failure_response([], "Invalid provider_info_id"))
 
-        job_details={}
-        job_details['provider_info_id']=data['provider_info_id']
-        jobDetails=JobDetails.objects.create(**job_details)
-        jobDetails.joblist.add(*job)
+        jobDetails = JobDetails.objects.create(provider_info=provider_info)
 
-        return Response(get_success_response(message="successfully job post"))
+        for job_item in joblist_data:
+            location_data = job_item.get('location', {})
+
+            jobLocationInfo = JobLocationInfo.objects.create(**location_data)
+
+            crt_job = {
+                'description': job_item.get('description'),
+                'reference_no': job_item.get('reference_no'),
+                'vacancies': job_item.get('vacancies'),
+                'budget': job_item.get('budget'),
+                'location': jobLocationInfo
+            }
+
+            joblist = Joblist.objects.create(**crt_job)
+            jobDetails.joblist.add(joblist)
+
+        return Response(get_success_response(message="Job details created successfully"))
+    
 
 class JobListing(APIView):
 
@@ -54,3 +61,4 @@ class JobListing(APIView):
         joblist=Joblist.objects.all()
         res=GetJobListSerilizers(joblist, many=True).data
         return Response(get_success_response("joblisting",details=res))
+

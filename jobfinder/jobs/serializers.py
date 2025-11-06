@@ -5,4 +5,4 @@ class GetJobListSerilizers(serializers.ModelSerializer):
 
     class Meta:
         model=Joblist
-        fields=['provider_info','description']
+        fields='__all__'
