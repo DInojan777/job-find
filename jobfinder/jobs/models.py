@@ -1,6 +1,19 @@
 from django.db import models
 from authentication.models import BaseModelMixin
 from users.models import EmployeeCompanyInfo
+from django.contrib.auth.models import User
+from authentication.models import *
+from company.models import *
+
+class JobDocument(BaseModelMixin):
+
+    title = models.CharField(max_length=220, null=True, blank=True)
+    photo = models.ImageField(upload_to='job_document', null=True, blank=True)
+    time_stamp = models.DateTimeField(default=now, editable=True)
+
+    def __str__(self):
+        title = str(self.id)+"==="+str(self.time_stamp) 
+        return title
 
 class JobLocationInfo(BaseModelMixin):
     is_default = models.BooleanField(default=True)
@@ -19,18 +32,17 @@ class JobLocationInfo(BaseModelMixin):
     country = models.CharField(max_length=50, null=True, blank=True)
     google_place_link = models.CharField(max_length=220, null=True, blank=True)
 
+class Joblist(BaseModelMixin):
 
-class joblist(BaseModelMixin):
-
-    provider_info=models.ForeignKey(EmployeeCompanyInfo, on_delete=models.CASCADE, null=True, blank=True)
     description=models.CharField(max_length=220, null=True, blank=True)
     reference_no=models.CharField(max_length=8, null=True, blank=True)
     vacancies=models.CharField(max_length=8, null=True, blank=True)
     budget=models.CharField(max_length=15, null=True, blank=True)
     expried_date = models.DateTimeField(auto_now=True)
     location=models.ForeignKey(JobLocationInfo, on_delete=models.CASCADE, null=True, blank=True)
+    photo = models.ImageField(upload_to='job_document', null=True, blank=True)
 
+class JobDetails(BaseModelMixin):
 
-
-
-    
+    provider_info=models.ForeignKey(EmployeeCompanyInfo, on_delete=models.CASCADE, null=True, blank=True)
+    joblist=models.ManyToManyField(Joblist, null=True, blank=True)
