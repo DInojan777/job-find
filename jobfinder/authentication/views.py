@@ -97,8 +97,8 @@ class RegisterClientAndContractor(APIView):
 
         company_meta={}
         company_meta['brand_name']=data['brand_name']
-        company_meta['display_name']=data['display_name']
-        company_meta['type_is_provider']=data['type_is_provider']
+      #   company_meta['display_name']=data['display_name']
+      #   company_meta['type_is_provider']=data['type_is_provider']
         company_meta['is_active']=True
         companyMetaInfo=CompanyMeta.objects.create(**company_meta)
         companyMetaInfo.save()
@@ -106,18 +106,18 @@ class RegisterClientAndContractor(APIView):
         company_cont={}
         company_cont['address_id']=data['address_id']
         company_cont['mobile_number_01']=data['mobile_number_01']
-        company_cont['communication_address']=data['communication_address']
-        company_cont['city']=data['city']
-        company_cont['district']=data['district']
-        company_cont['state']=data['state']
-        company_cont['pincode']=data['pincode']
-        company_cont['country']=data['country']
+      #   company_cont['communication_address']=data['communication_address']
+      #   company_cont['city']=data['city']
+      #   company_cont['district']=data['district']
+      #   company_cont['state']=data['state']
+      #   company_cont['pincode']=data['pincode']
+      #   company_cont['country']=data['country']
         companyContactInfo=CompanyContactInfo.objects.create(**company_cont)
         companyContactInfo.save()
 
         form_company_branch = {}
         form_company_branch['name'] = company_meta['brand_name']
-        form_company_branch['display_name'] = company_meta['brand_name']
+      #   form_company_branch['display_name'] = company_meta['brand_name']
         form_company_branch['is_parent'] = True
         form_company_branch['is_active'] = True
         companyBranchInfo=CompanyBranchInfo.objects.create(
@@ -326,3 +326,76 @@ class Dashboard(APIView):
                   print("details2")
                   print(details)
                   return Response(get_validation_failure_response(None, '2Please login to continue'))
+
+
+class ChangePasswordApi(APIView):
+      
+      authentication_classes=[]
+      permission_classes=[]
+
+      def post(self, request, format=None):
+
+            data = request.data
+
+            email = data.get("email", None)
+            otp = data.get("otp", None)
+            new_password = data.get("new_password", None)
+
+            if email is not None:
+                  user = User.objects.filter(email=email).first()
+                  print("user==============>",user)
+                  if otp is not None:
+                        employeeCompanyInfo = EmployeeCompanyInfo.objects.get(user=user)
+                        print(employeeCompanyInfo,"===================>emp")
+                        print(employeeCompanyInfo.authentication.mobile_otp)
+                        if employeeCompanyInfo.authentication.mobile_otp == otp:
+                              if new_password is not None:
+                                    user.set_password(new_password)
+                                    user.save()
+                                    return Response(get_success_response("password updated succesfully"))
+                              else:
+                                    return Response(get_validation_failure_response("Password is required"))
+
+                        else:
+                              return Response(get_validation_failure_response("otp is invalid"))
+
+                  else:
+                       return Response(get_validation_failure_response("otp is required"))
+
+
+            else:
+                  return Response(get_validation_failure_response("email is required"))
+
+
+# class ChangePasswordApi(APIView):
+#     def post(self, request, format=None):
+#         data = request.data
+
+#         email = data.get("email")
+#         otp = data.get("otp")
+#         new_password = data.get("new_password")
+
+#         if not email:
+#             return Response(get_validation_failure_response("email is required"))
+
+#         user = User.objects.filter(email=email).first()
+#         if not user:
+#             return Response(get_validation_failure_response("user not found"))
+
+#         if not otp:
+#             return Response(get_validation_failure_response("otp is required"))
+
+#         user_otp = EmployeeCompanyInfo.objects.filter(user=user).first()
+#         if not user_otp:
+#             return Response(get_validation_failure_response("user otp record not found"))
+
+#         # Compare OTP
+#         if str(user_otp.mobile_otp).strip() == str(otp).strip():
+#             # Here you can also set the new password if needed
+#             # user.set_password(new_password)
+#             # user.save()
+#             return Response(get_success_response("otp is correct"))
+#         else:
+#             return Response(get_validation_failure_response("otp is invalid"))
+
+            
