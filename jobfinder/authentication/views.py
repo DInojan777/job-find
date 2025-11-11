@@ -372,7 +372,6 @@ class ChangePasswordApi(APIView):
                                     return Response(get_validation_failure_response("Password is required"))
                         else:
                               return Response(get_validation_failure_response("otp is invalid"))
-
                   else:
                        return Response(get_validation_failure_response("otp is required"))
             else:
