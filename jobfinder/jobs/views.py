@@ -56,6 +56,9 @@ class CreateJob(APIView):
 
         return Response(get_success_response(message="successfully job post"))
 
+# ========================================================================================================================
+
+
 
 class GetJobList(APIView):
 
