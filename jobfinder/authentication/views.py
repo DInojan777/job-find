@@ -327,3 +327,38 @@ class Dashboard(APIView):
                   print("details2")
                   print(details)
                   return Response(get_validation_failure_response(None, '2Please login to continue'))
+            
+# ========================================================================================================================
+            
+
+class ChangePasswordApi(APIView):
+      
+      authentication_classes=[]
+      permission_classes=[]
+
+      def post(self, request, format=None):
+
+            data = request.data
+
+            email = data.get("email", None)
+            otp = data.get("otp", None)
+            new_password = data.get("new_password", None)
+
+            if email is not None:
+                  user = User.objects.filter(email=email).first()
+                  if otp is not None:
+                        employeeCompanyInfo = EmployeeCompanyInfo.objects.get(user=user)
+                        if employeeCompanyInfo.authentication.mobile_otp == otp:
+                              if new_password is not None:
+                                    user.set_password(new_password)
+                                    user.save()
+                                    return Response(get_success_response("password updated succesfully"))
+                              else:
+                                    return Response(get_validation_failure_response("Password is required"))
+                        else:
+                              return Response(get_validation_failure_response("otp is invalid"))
+
+                  else:
+                       return Response(get_validation_failure_response("otp is required"))
+            else:
+                  return Response(get_validation_failure_response("email is required"))

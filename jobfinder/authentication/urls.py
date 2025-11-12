@@ -8,5 +8,6 @@ urlpatterns = [
     path('memberLoginUsingPassword', views.MemberLoginUsingPassword.as_view(), name='memberLoginUsingPassword'),
     path('sendOtp', views.SendOtp.as_view(), name='sendOtp'),
     path('dashboard', views.Dashboard.as_view(), name='dashboard'),
+    path('changePasswordApi', views.ChangePasswordApi.as_view(), name='changePasswordApi'),
 
     ]
