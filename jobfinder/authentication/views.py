@@ -25,6 +25,7 @@ class RegisterJobSeeker(APIView):
 
     def post(self, request, format=None):
         data = request.data
+        generatedPassword=data.get('password')
 
         username = data['email']
         if User.objects.filter(username=username).exists():
@@ -33,9 +34,9 @@ class RegisterJobSeeker(APIView):
                     return Response(get_validation_failure_response(None, "Job seeker with mobile number already exist"))
 
         user = User(username=data['email'], email=data['email'])
-        user.password=data['password']
         user.first_name = data['first_name']
         user.last_name = data['last_name']
+        user.set_password(generatedPassword)
         user.save()
 
         data_user={}
@@ -82,17 +83,17 @@ class RegisterClientAndContractor(APIView):
 
     def post(self, request, format=None):
         data = request.data
-
+        generatedPassword=data.get('password')
         username = data['email']
         if User.objects.filter(username=username).exists():
              return Response(get_validation_failure_response("job seekser with this email already exists"))
         if getuser_by_mobile(data['mobile_number_01']) is not None:
                     return Response(get_validation_failure_response(None, "Job seeker with mobile number already exist"))
         
-        user = User(username=data['email'], email=data['email'])
-        user.password=data['password']
+        user = User(username=data['email'], email=data['email'],password=generatedPassword)
         user.first_name = data['first_name']
         user.last_name = data['last_name']
+        user.set_password(generatedPassword)
         user.save()
 
         company_meta={}
@@ -169,7 +170,7 @@ class MemberLoginUsingPassword(APIView):
             email = data.get('email', None)
             mobile_number = data.get('mobile_number', None)
             password = data.get('password', None)
-
+    
             if not password:
                  return Response(get_validation_failure_response([],"Password is required"))
 
@@ -193,8 +194,8 @@ class MemberLoginUsingPassword(APIView):
             
             employeeCompanyInfo = EmployeeCompanyInfo.objects.filter(user=user).first()
 
-            if user.password != data["password"]:
-                  return Response(get_validation_failure_response([], "Invalid user credentials"))
+            if not user.check_password(password):
+                  return Response(get_validation_failure_response([], "Invalid user 1 credentials"))
             
             if employeeCompanyInfo and not employeeCompanyInfo.is_active:
                   return Response(get_validation_failure_response([], "Your account is deactivated. Please contact your administrator."))
