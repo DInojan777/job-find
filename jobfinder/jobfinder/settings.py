@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'users',
     'company',
     'jobs',
+    'multiselectfield',
 ]
 
 MIDDLEWARE = [

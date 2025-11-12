@@ -7,6 +7,10 @@ from rest_framework.permissions import IsAuthenticated
 from .models import *
 from authentication.response_serializers import *
 from .serializers import *
+from datetime import timedelta
+from django.utils import timezone
+from django.db.models import Q
+from django.utils.dateparse import parse_datetime
 
 class CreateJob(APIView):
 
@@ -20,24 +24,26 @@ class CreateJob(APIView):
 
         if not provider_id:
             return Response(get_validation_failure_response("Please provide provider_info_id"))
-
         try:
-            EmployeeCompanyInfo.objects.get(id=provider_id)
+            employeeCompanyInfo=EmployeeCompanyInfo.objects.get(id=provider_id)
         except EmployeeCompanyInfo.DoesNotExist:
             return Response(get_validation_failure_response("Invalid provider_info_id"))
+        user=employeeCompanyInfo.user
 
         crt_job={}
         crt_job['provider_info_id']=data['provider_info_id']
+        crt_job['position']=data['position']
         crt_job['description']=data['description']
-        crt_job['vacancies']=data['vacancies']
+        crt_job['experience']=data['experience']
+        crt_job['reference_name']=data['reference_name']
         crt_job['reference_no']=data['reference_no']
+        crt_job['vacancies']=data['vacancies']
         crt_job['budget']=data['budget']
         crt_job['expried_date']=data['expried_date']
 
         job_cont={}
         job_cont['mobile_number_01']=data['mobile_number_01']
         job_cont['address_line_01']=data['address_line_01']
-        job_cont['communication_address']=data['communication_address']
         job_cont['city']=data['city']
         job_cont['district']=data['district']
         job_cont['state']=data['state']
@@ -46,9 +52,10 @@ class CreateJob(APIView):
 
         jobContactInfo=JobLocationInfo.objects.create(**job_cont)
 
-        Joblist.objects.create(**crt_job,location=jobContactInfo)
+        Joblist.objects.create(**crt_job,location=jobContactInfo,raised_by=user)
 
         return Response(get_success_response(message="successfully job post"))
+
 
 class GetJobList(APIView):
 
@@ -57,9 +64,47 @@ class GetJobList(APIView):
 
     def post(self, request, format=None):
         data = request.data
+        print("data==========>",data)
 
-        joblist=Joblist.objects.all()
-        res=GetJobListSerilizers(joblist, many=True).data
+        now= timezone.now()        
+        queryset = Joblist.objects.filter(expried_date__gt=now)
 
-        return Response(get_success_response("joblisting",details=res))
+        search= data.get('search')
+        if search:
+            queryset = queryset.filter(Q(description__icontains=search) | Q(position__icontains=search))
+
+        recent_days = data.get('recent_days')
+        if recent_days is not None:
+            recent_days = int(recent_days)
+            recent_cutoff = now - timedelta(days=recent_days)
+            queryset = queryset.filter(created_at__gte=recent_cutoff)
+        
+        experience=data.get('exprience')
+        if experience is not None:
+            queryset=queryset.filter(experience_contains=experience)
+        
+        address_line_01=data.get('address_line_01')
+        if address_line_01 is not None:
+            queryset = queryset.filter(location__address_line_01__icontains=address_line_01)
+        city=data.get('city')
+        if city is not None:
+            queryset = queryset.filter(location__city__icontains=city)
+        district=data.get('district')
+        if district is not None:
+            queryset = queryset.filter(location__district__icontains=district)
+
+        start_date = data.get('start_date')
+        if start_date:
+            queryset = queryset.filter(created_at__gte=start_date)
+        end_date = data.get('end_date')
+        if end_date:
+            queryset = queryset.filter(created_at__lte=end_date)
+        
+        if queryset is not None:
+            serializer = GetJobListSerilizers(queryset, many=True)
+            print(serializer.data)
+
+            return Response(get_success_response(details=serializer.data))
+        else:
+            return Response(get_validation_failure_response('not found'))
 
