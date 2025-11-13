@@ -46,7 +46,7 @@ class Joblist(BaseModelMixin):
         User, on_delete=models.CASCADE, null=True, blank=True)
     provider_info=models.ForeignKey(EmployeeCompanyInfo, on_delete=models.CASCADE, null=True, blank=True)
     position = models.CharField(max_length=225,null=True, blank=True)
-    description=models.CharField(max_length=225, null=True, blank=True)
+    description=models.TextField(null=True, blank=True)
     experience = models.IntegerField(default=0)
     reference_name = models.CharField(max_length=210, null=True, blank=True)
     reference_no=models.CharField(max_length=8, null=True, blank=True)
@@ -57,3 +57,16 @@ class Joblist(BaseModelMixin):
     location=models.ForeignKey(JobLocationInfo, on_delete=models.CASCADE, null=True, blank=True)
     attachments =models.ManyToManyField(JobDocument)
 
+class JobApplication(BaseModelMixin):
+
+    APPLICANT_STATUS=[
+        ('pending','Pending'),
+        ('accpeted','Accepted'),
+        ('rejected','Rejected'),
+    ]
+
+    job=models.ForeignKey(Joblist, on_delete=models.CASCADE, null=True, blank=True)
+    applicant_details=models.ForeignKey(EmployeeCompanyInfo, on_delete=models.CASCADE, null=True, blank=True)
+    expection_rate=models.CharField(max_length=21, null=True, blank=True)
+    status=models.CharField(max_length=200,choices=APPLICANT_STATUS, null=True, blank=True, default='pending')
+    

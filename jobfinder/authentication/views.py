@@ -315,8 +315,8 @@ class Dashboard(APIView):
                   permission_details["is_client"] = request_info['is_client']
                   permission_details['is_job_seeker']=request_info['is_job_seeker']
                   permission_details["is_guest"] =request_info['is_guest']
-                  # permission_details["company_branch"] =request_info['company_branch']
-                  # permission_details["company_info"] = request_info['company_info'].company.id
+                  permission_details["company_branch"] =request_info['company_branch']
+                  permission_details["company_info"] = request_info['company_info'].id
 
                   dashboard={"user_details": user_details,
                         "permission_details": permission_details}                        
@@ -357,7 +357,6 @@ class ChangePasswordApi(APIView):
                                     return Response(get_validation_failure_response("Password is required"))
                         else:
                               return Response(get_validation_failure_response("otp is invalid"))
-
                   else:
                        return Response(get_validation_failure_response("otp is required"))
             else:
