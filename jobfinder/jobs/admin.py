@@ -4,5 +4,7 @@ from .models import *
 admin.site.register(JobLocationInfo)
 admin.site.register(Joblist)
 admin.site.register(JobDocument)
+admin.site.register(JobApplication)
+
 
 

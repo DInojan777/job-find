@@ -59,7 +59,6 @@ class CreateJob(APIView):
 # ========================================================================================================================
 
 
-
 class GetJobList(APIView):
 
     authentication_classes = []
@@ -110,4 +109,42 @@ class GetJobList(APIView):
             return Response(get_success_response(details=serializer.data))
         else:
             return Response(get_validation_failure_response('not found'))
+        
 
+# ========================================================================================================================
+        
+
+class ApplyJob(APIView):
+    
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request, formate=None):
+        data=request.data    
+
+        job_id = data.get('job_id')
+        applicant_details_id=data.get('applicant_details_id')
+
+        if not job_id:
+            return Response(get_validation_failure_response("Please provide job_id"))
+        try:
+            joblist=Joblist.objects.get(id=job_id)
+        except Joblist.DoesNotExist:
+            return Response(get_validation_failure_response("Invalid job_id"))
+        
+        if not applicant_details_id:
+            return Response(get_validation_failure_response("Please provide applicant_details_id"))
+        try:
+            employeeCompanyInfo=EmployeeCompanyInfo.objects.get(id=applicant_details_id)
+        except EmployeeCompanyInfo.DoesNotExist:
+            return Response(get_validation_failure_response("Invalid applicant_details_id"))
+        
+        job_app={}
+        job_app['job_id']=data['job_id']
+        job_app['applicant_details_id']=data['applicant_details_id']
+        job_app['expection_rate']=data['expection_rate']
+        # job_app['status']=data['status']
+
+        JobApplication.objects.create(**job_app)
+
+        return Response(get_success_response('Job apply successfully'))

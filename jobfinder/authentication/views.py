@@ -315,8 +315,8 @@ class Dashboard(APIView):
                   permission_details["is_client"] = request_info['is_client']
                   permission_details['is_job_seeker']=request_info['is_job_seeker']
                   permission_details["is_guest"] =request_info['is_guest']
-                  # permission_details["company_branch"] =request_info['company_branch']
-                  # permission_details["company_info"] = request_info['company_info'].company.id
+                  permission_details["company_branch"] =request_info['company_branch']
+                  permission_details["company_info"] = request_info['company_info'].id
 
                   dashboard={"user_details": user_details,
                         "permission_details": permission_details}                        
@@ -327,3 +327,38 @@ class Dashboard(APIView):
                   print("details2")
                   print(details)
                   return Response(get_validation_failure_response(None, '2Please login to continue'))
+            
+# ========================================================================================================================
+            
+
+class ChangePasswordApi(APIView):
+      
+      authentication_classes=[]
+      permission_classes=[]
+
+      def post(self, request, format=None):
+
+            data = request.data
+
+            email = data.get("email", None)
+            otp = data.get("otp", None)
+            new_password = data.get("new_password", None)
+
+            if email is not None:
+                  user = User.objects.filter(email=email).first()
+                  if otp is not None:
+                        employeeCompanyInfo = EmployeeCompanyInfo.objects.get(user=user)
+                        if employeeCompanyInfo.authentication.mobile_otp == otp:
+                              if new_password is not None:
+                                    user.set_password(new_password)
+                                    user.save()
+                                    return Response(get_success_response("password updated succesfully"))
+                              else:
+                                    return Response(get_validation_failure_response("Password is required"))
+                        else:
+                              return Response(get_validation_failure_response("otp is invalid"))
+
+                  else:
+                       return Response(get_validation_failure_response("otp is required"))
+            else:
+                  return Response(get_validation_failure_response("email is required"))
