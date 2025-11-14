@@ -103,7 +103,7 @@ class GetJobList(APIView):
             queryset = queryset.filter(created_at__lte=end_date)
         
         if queryset is not None:
-            serializer = GetJobListSerilizers(queryset, many=True)
+            serializer = GetJobListSerializer(queryset, many=True)
             print(serializer.data)
 
             return Response(get_success_response(details=serializer.data))
@@ -148,3 +148,27 @@ class ApplyJob(APIView):
         JobApplication.objects.create(**job_app)
 
         return Response(get_success_response('Job apply successfully'))
+    
+    
+# ========================================================================================================================
+
+
+class GetJobApplicaten(APIView):
+
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request, formate=None):
+        data= request.data
+
+        job_id=data.get('job_id')
+
+        if not job_id:
+            return Response(get_validation_failure_response("Please provide job_id"))
+        try:
+            jobApplication=JobApplication.objects.filter(job__id=job_id)
+        except JobApplication.DoesNotExist:
+            return Response(get_validation_failure_response("Invalid job_id"))
+        
+        serializers=GetApplyedJobSerializer(jobApplication, many=True).data
+        return Response(get_success_response(details=serializers))
