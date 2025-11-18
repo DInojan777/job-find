@@ -143,7 +143,6 @@ class ApplyJob(APIView):
         job_app['job_id']=data['job_id']
         job_app['applicant_details_id']=data['applicant_details_id']
         job_app['expection_rate']=data['expection_rate']
-        # job_app['status']=data['status']
 
         JobApplication.objects.create(**job_app)
 
@@ -153,7 +152,7 @@ class ApplyJob(APIView):
 # ========================================================================================================================
 
 
-class GetJobApplicaten(APIView):
+class GetJobApplicant(APIView):
 
     authentication_classes = []
     permission_classes = []
@@ -165,10 +164,58 @@ class GetJobApplicaten(APIView):
 
         if not job_id:
             return Response(get_validation_failure_response("Please provide job_id"))
+
         try:
             jobApplication=JobApplication.objects.filter(job__id=job_id)
+
+        except JobApplication.DoesNotExist:
+            return Response(get_validation_failure_response("Invalid job_id"))
+
+        serializers=GetApplyedJobSerializer(jobApplication, many=True).data
+
+        return Response(get_success_response(details=serializers))
+    
+
+# ========================================================================================================================
+
+
+class ApplicationStatus(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request, formate=None):
+        data= request.data
+
+        provider_id=data.get('provider_id')
+        job_id=data.get('job_id')
+        job_applicant_id=data.get('job_applicant_id')
+        
+        if not provider_id:
+            return Response(get_validation_failure_response("Please provide provider_id"))
+        try:
+            Joblist.objects.get(provider_info=provider_id)
+        except Joblist.DoesNotExist:
+            return Response(get_validation_failure_response("Invalid User"))
+
+        if not job_id:
+            return Response(get_validation_failure_response("Please provide job_id"))
+        try:
+            jobApplication=JobApplication.objects.filter(job_id=job_id)
         except JobApplication.DoesNotExist:
             return Response(get_validation_failure_response("Invalid job_id"))
         
-        serializers=GetApplyedJobSerializer(jobApplication, many=True).data
-        return Response(get_success_response(details=serializers))
+        if not job_applicant_id:
+            return Response(get_validation_failure_response("Please provide job_applicant_id"))
+        try:
+            JobApplication.objects.filter(id=job_applicant_id)
+        except JobApplication.DoesNotExist:
+            return Response(get_validation_failure_response("Invalid job_applicant_id"))
+        
+        job_app={}
+        job_app['job_id']=data['job_id']
+        job_app['job_applicant_id']=data['job_applicant_id']
+        job_app['status']=data['status']
+
+        JobApplicationStatus.objects.create(**job_app)
+        
+        return Response(get_success_response('status uplode successufully'))

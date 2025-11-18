@@ -10,10 +10,10 @@ class GetJobListSerializer(serializers.ModelSerializer):
 class GetApplyedJobSerializer(serializers.ModelSerializer):
 
     user_applicant_details= serializers.SerializerMethodField()
-    
+
     class Meta:
         model=JobApplication
-        fields=['job', 'applicant_details', 'expection_rate', 'status','user_applicant_details']
+        fields=['job', 'applicant_details', 'expection_rate','user_applicant_details']
 
     def get_user_applicant_details(self, obj):
         return{"user":obj.applicant_details.user.username, "is_job_seeker":obj.applicant_details.authentication.is_job_seeker, 
