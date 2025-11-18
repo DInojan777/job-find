@@ -59,14 +59,20 @@ class Joblist(BaseModelMixin):
 
 class JobApplication(BaseModelMixin):
 
+    job=models.ForeignKey(Joblist, on_delete=models.CASCADE, null=True, blank=True)
+    applicant_details=models.ForeignKey(EmployeeCompanyInfo, on_delete=models.CASCADE, null=True, blank=True)
+    expection_rate=models.CharField(max_length=21, null=True, blank=True)
+
+class JobApplicationStatus(BaseModelMixin):
+
     APPLICANT_STATUS=[
         ('pending','Pending'),
         ('accpeted','Accepted'),
         ('rejected','Rejected'),
     ]
-
     job=models.ForeignKey(Joblist, on_delete=models.CASCADE, null=True, blank=True)
-    applicant_details=models.ForeignKey(EmployeeCompanyInfo, on_delete=models.CASCADE, null=True, blank=True)
-    expection_rate=models.CharField(max_length=21, null=True, blank=True)
+    job_applicant=models.ForeignKey(JobApplication, on_delete=models.CASCADE, null=True, blank=True)
     status=models.CharField(max_length=200,choices=APPLICANT_STATUS, null=True, blank=True, default='pending')
-    
+
+
+
