@@ -67,7 +67,7 @@ class JobApplicationStatus(BaseModelMixin):
 
     APPLICANT_STATUS=[
         ('pending','Pending'),
-        ('accpeted','Accepted'),
+        ('accepted','Accepted'),
         ('rejected','Rejected'),
     ]
     job=models.ForeignKey(Joblist, on_delete=models.CASCADE, null=True, blank=True)

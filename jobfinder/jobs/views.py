@@ -159,7 +159,6 @@ class GetJobApplicant(APIView):
 
     def post(self, request, formate=None):
         data= request.data
-
         job_id=data.get('job_id')
 
         if not job_id:
@@ -179,7 +178,7 @@ class GetJobApplicant(APIView):
 # ========================================================================================================================
 
 
-class ApplicationStatus(APIView):
+class AddApplicationStatus(APIView):
     authentication_classes = []
     permission_classes = []
 
@@ -210,7 +209,7 @@ class ApplicationStatus(APIView):
             JobApplication.objects.filter(id=job_applicant_id)
         except JobApplication.DoesNotExist:
             return Response(get_validation_failure_response("Invalid job_applicant_id"))
-        
+
         job_app={}
         job_app['job_id']=data['job_id']
         job_app['job_applicant_id']=data['job_applicant_id']
@@ -219,3 +218,40 @@ class ApplicationStatus(APIView):
         JobApplicationStatus.objects.create(**job_app)
         
         return Response(get_success_response('status uplode successufully'))
+    
+
+
+class GetApplicationStatus(APIView):
+
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request, formate=None):
+        data= request.data
+
+        job_id=data.get('job_id')     
+
+        if not job_id:
+            return Response(get_validation_failure_response("Please provide job_id"))
+
+        try:
+            queryset=JobApplicationStatus.objects.filter(job_id=job_id)
+
+        except JobApplicationStatus.DoesNotExist:
+            return Response(get_validation_failure_response("Invalid job_id"))
+
+        start_date = data.get('start_date')
+        if start_date:
+            queryset = queryset.filter(created_at__gte=start_date)
+
+        end_date = data.get('end_date')
+        if end_date:
+            queryset = queryset.filter(created_at__lte=end_date)
+
+        search=data.get('search')
+        if search:
+            queryset=JobApplicationStatus.objects.filter(status=search)
+
+        serializers=GetApplicationStatusSerializer(queryset,many=True).data
+
+        return Response(get_success_response(details=serializers))

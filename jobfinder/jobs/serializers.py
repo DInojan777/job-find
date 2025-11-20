@@ -18,3 +18,18 @@ class GetApplyedJobSerializer(serializers.ModelSerializer):
     def get_user_applicant_details(self, obj):
         return{"user":obj.applicant_details.user.username, "is_job_seeker":obj.applicant_details.authentication.is_job_seeker, 
                "is_client":obj.applicant_details.authentication.is_client,"is_contractor":obj.applicant_details.authentication.is_contractor}
+
+class GetApplicationStatusSerializer(serializers.ModelSerializer):
+
+    user_applicant_details= serializers.SerializerMethodField()
+
+    class Meta:
+        model=JobApplicationStatus
+        fields=['job','job_applicant','status','user_applicant_details']
+
+    def get_user_applicant_details(self, obj):
+
+        return{
+            "user":obj.job_applicant.applicant_details.user.username,"is_job_seeker":obj.job_applicant.applicant_details.authentication.is_job_seeker, 
+            "is_client":obj.job_applicant.applicant_details.authentication.is_client,"is_contractor":obj.job_applicant.applicant_details.authentication.is_contractor
+        }
