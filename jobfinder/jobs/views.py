@@ -309,3 +309,4 @@ class AddProtfolio(APIView):
         UserProfessionalInfo.objects.create(user_info_id=user_info_id, portfolio_photo=uploaded_file)
 
         return Response(get_success_response('protfolio uplode successfully'))
+    
