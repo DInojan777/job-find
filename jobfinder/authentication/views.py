@@ -113,8 +113,8 @@ class RegisterClientAndContractor(APIView):
 
         company_meta={}
         company_meta['brand_name']=data['brand_name']
-        company_meta['display_name']=data['display_name']
-        company_meta['type_is_provider']=data['type_is_provider']
+      #   company_meta['display_name']=data['display_name']
+      #   company_meta['type_is_provider']=data['type_is_provider']
         company_meta['is_active']=True
         companyMetaInfo=CompanyMeta.objects.create(**company_meta)
         companyMetaInfo.save()
@@ -122,18 +122,18 @@ class RegisterClientAndContractor(APIView):
         company_cont={}
         company_cont['address_id']=data['address_id']
         company_cont['mobile_number_01']=data['mobile_number_01']
-        company_cont['communication_address']=data['communication_address']
-        company_cont['city']=data['city']
-        company_cont['district']=data['district']
-        company_cont['state']=data['state']
-        company_cont['pincode']=data['pincode']
-        company_cont['country']=data['country']
+      #   company_cont['communication_address']=data['communication_address']
+      #   company_cont['city']=data['city']
+      #   company_cont['district']=data['district']
+      #   company_cont['state']=data['state']
+      #   company_cont['pincode']=data['pincode']
+      #   company_cont['country']=data['country']
         companyContactInfo=CompanyContactInfo.objects.create(**company_cont)
         companyContactInfo.save()
 
         form_company_branch = {}
         form_company_branch['name'] = company_meta['brand_name']
-        form_company_branch['display_name'] = company_meta['brand_name']
+      #   form_company_branch['display_name'] = company_meta['brand_name']
         form_company_branch['is_parent'] = True
         form_company_branch['is_active'] = True
         companyBranchInfo=CompanyBranchInfo.objects.create(
