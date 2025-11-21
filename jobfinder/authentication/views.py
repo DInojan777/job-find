@@ -24,55 +24,70 @@ class RegisterJobSeeker(APIView):
     permission_classes = []
 
     def post(self, request, format=None):
-        data = request.data
-        generatedPassword=data.get('password')
+      data = request.data
+      generatedPassword=data.get('password')
 
-        username = data['email']
-        if User.objects.filter(username=username).exists():
-             return Response(get_validation_failure_response("job seekser with this email already exists"))
-        if getuser_by_mobile(data['mobile_number']) is not None:
-                    return Response(get_validation_failure_response(None, "Job seeker with mobile number already exist"))
+      username = data['email']
+      #################################
+      ## Valdating If user with same email or mobile number Already Exist
+      #################################
+      if User.objects.filter(username=username).exists():
+            return Response(get_validation_failure_response("job seekser with this email already exists"))
+      if getuser_by_mobile(data['mobile_number']) is not None:
+            return Response(get_validation_failure_response(None, "Job seeker with mobile number already exist"))
 
-        user = User(username=data['email'], email=data['email'])
-        user.first_name = data['first_name']
-        user.last_name = data['last_name']
-        user.set_password(generatedPassword)
-        user.save()
+      #################################
+      ## Creating New User
+      #################################
+      user = User(username=data['email'], email=data['email'])
+      user.first_name = data['first_name']
+      user.last_name = data['last_name']
+      user.set_password(generatedPassword)
+      user.save()
 
-        data_user={}
-        data_user['gender']=data['gender']
-        data_user['mobile_number']=data['mobile_number']
-        userPersonalInfo=UserPersonalInfo.objects.create(user=user,**data_user)
-        userPersonalInfo.save()
+      #################################
+      ## Creating User Personal Detail
+      #################################
+      data_user={}
+      data_user['gender']=data['gender']
+      data_user['mobile_number']=data['mobile_number']
+      userPersonalInfo=UserPersonalInfo.objects.create(user=user,**data_user)
+      userPersonalInfo.save()
 
-        userAuthentication=UserAuthentication.objects.create(user=user)
-        userAuthentication.is_job_seeker=True
-        userAuthentication.is_active=True
-        userAuthentication.save()
+      #################################
+      ## Creating Authentication
+      #################################
+      userAuthentication=UserAuthentication.objects.create(user=user)
+      userAuthentication.is_job_seeker=True
+      userAuthentication.is_active=True
+      userAuthentication.save()
 
-        company_meta={}
-        company_meta['brand_name']='job seeker company'
-        company_meta['display_name']='job seeker company'
-        company_meta['type_is_provider']=False
-        company_meta['is_active']=True
-        companyMetaInfo=CompanyMeta.objects.create(**company_meta)
-        companyMetaInfo.save()
+      #################################
+      ## Creating Company - For Each User
+      #################################
+      company_meta={}
+      company_meta['brand_name']='job seeker company'
+      company_meta['display_name']='job seeker company'
+      company_meta['type_is_provider']=False
+      company_meta['is_active']=True
+      companyMetaInfo=CompanyMeta.objects.create(**company_meta)
+      companyMetaInfo.save()
 
-        userDesignation=UserDesignation.objects.create(
-               company=companyMetaInfo, name=userAuthentication.admin_registration_designation , is_admin=True)
-        
-        employee_id = random.randint(1000, 9999)
-        form_employee_company_info = {}
-        form_employee_company_info['employee_id'] = employee_id
+      userDesignation=UserDesignation.objects.create(
+            company=companyMetaInfo, name=userAuthentication.admin_registration_designation , is_admin=True)
+      
+      employee_id = random.randint(1000, 9999)
+      form_employee_company_info = {}
+      form_employee_company_info['employee_id'] = employee_id
 
-        EmployeeCompanyInfo.objects.create(
-              user=user, designation=userDesignation, company=companyMetaInfo, authentication=userAuthentication, **form_employee_company_info)
+      EmployeeCompanyInfo.objects.create(
+            user=user, designation=userDesignation, company=companyMetaInfo, authentication=userAuthentication, **form_employee_company_info)
 
-        token=get_user_token(user.username)
+      token=get_user_token(user.username)
 
-        response={'success':True,'token':token,'message':"Job seeker Registered Successfully"}
+      response={'success':True,'token':token,'message':"Job seeker Registered Successfully"}
 
-        return Response (get_success_response("Job seeker Registered Successfully",details=response))
+      return Response (get_success_response("Job seeker Registered Successfully",details=response))
     
 # ========================================================================================================================
 

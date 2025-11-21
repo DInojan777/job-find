@@ -11,6 +11,8 @@ from datetime import timedelta
 from django.utils import timezone
 from django.db.models import Q
 from django.utils.dateparse import parse_datetime
+from users.models import *
+
 
 class CreateJob(APIView):
 
@@ -152,27 +154,27 @@ class ApplyJob(APIView):
 # ========================================================================================================================
 
 
-class GetJobApplicant(APIView):
+# class GetJobApplicant(APIView):
 
-    authentication_classes = []
-    permission_classes = []
+#     authentication_classes = []
+#     permission_classes = []
 
-    def post(self, request, formate=None):
-        data= request.data
-        job_id=data.get('job_id')
+#     def post(self, request, formate=None):
+#         data= request.data
+#         job_id=data.get('job_id')
 
-        if not job_id:
-            return Response(get_validation_failure_response("Please provide job_id"))
+#         if not job_id:
+#             return Response(get_validation_failure_response("Please provide job_id"))
 
-        try:
-            jobApplication=JobApplication.objects.filter(job__id=job_id)
+#         try:
+#             jobApplication=JobApplication.objects.filter(job__id=job_id)
 
-        except JobApplication.DoesNotExist:
-            return Response(get_validation_failure_response("Invalid job_id"))
+#         except JobApplication.DoesNotExist:
+#             return Response(get_validation_failure_response("Invalid job_id"))
 
-        serializers=GetApplyedJobSerializer(jobApplication, many=True).data
+#         serializers=GetApplyedJobSerializer(jobApplication, many=True).data
 
-        return Response(get_success_response(details=serializers))
+#         return Response(get_success_response(details=serializers))
     
 
 # ========================================================================================================================
@@ -219,7 +221,7 @@ class AddApplicationStatus(APIView):
         
         return Response(get_success_response('status uplode successufully'))
     
-
+# ========================================================================================================================
 
 class GetApplicationStatus(APIView):
 
@@ -255,3 +257,55 @@ class GetApplicationStatus(APIView):
         serializers=GetApplicationStatusSerializer(queryset,many=True).data
 
         return Response(get_success_response(details=serializers))
+    
+class AddJobDetails(APIView):
+
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request, formate=None):
+        data= request.data
+
+        job_id=data.get('job_id')     
+
+        if not job_id:
+            return Response(get_validation_failure_response("Please provide job_id"))
+        try:
+            jobApplication=JobApplication.objects.filter(job_id=job_id)
+        except JobApplicationStatus.DoesNotExist:
+            return Response(get_validation_failure_response("Invalid job_id"))
+
+
+class AddProtfolio(APIView):
+
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request, formate=None):
+
+        data= request.data
+        files = request.FILES
+
+        user_info_id=data.get('user_info_id')
+
+        if not user_info_id:
+            return Response(get_validation_failure_response('please provid user info id '))
+        
+        try:
+            EmployeeCompanyInfo.objects.get(id=user_info_id)
+        except EmployeeCompanyInfo.DoesNotExist:
+            return Response(get_validation_failure_response('invalid user'))
+
+        today = now().date()
+        existing_count = UserProfessionalInfo.objects.filter(user_info__id=user_info_id, created_at__date=today).count()
+        
+        if existing_count >= 2:
+            return Response(get_validation_failure_response("You can only upload 2 photos per day."))
+        
+        uploaded_file = files.get('portfolio_photo')
+        if not uploaded_file:
+            return Response(get_validation_failure_response('No image provided'))
+        
+        profi = UserProfessionalInfo.objects.create(user_info_id=user_info_id, portfolio_photo=uploaded_file)
+
+        return Response(get_success_response('protfolio uplode successfully'))

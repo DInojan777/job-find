@@ -6,6 +6,7 @@ admin.site.register(Joblist)
 admin.site.register(JobDocument)
 admin.site.register(JobApplication)
 admin.site.register(JobApplicationStatus)
+admin.site.register(JobDetails)
 
 
 

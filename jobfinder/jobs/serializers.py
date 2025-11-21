@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from .models import *
+from users.models import *
+
 
 class GetJobListSerializer(serializers.ModelSerializer):
 
@@ -7,17 +9,17 @@ class GetJobListSerializer(serializers.ModelSerializer):
         model=Joblist
         fields='__all__'
 
-class GetApplyedJobSerializer(serializers.ModelSerializer):
+# class GetApplyedJobSerializer(serializers.ModelSerializer):
 
-    user_applicant_details= serializers.SerializerMethodField()
+#     user_applicant_details= serializers.SerializerMethodField()
 
-    class Meta:
-        model=JobApplication
-        fields=['job', 'applicant_details', 'expection_rate','user_applicant_details']
+#     class Meta:
+#         model=JobApplication
+#         fields=['job', 'applicant_details', 'expection_rate','user_applicant_details']
 
-    def get_user_applicant_details(self, obj):
-        return{"user":obj.applicant_details.user.username, "is_job_seeker":obj.applicant_details.authentication.is_job_seeker, 
-               "is_client":obj.applicant_details.authentication.is_client,"is_contractor":obj.applicant_details.authentication.is_contractor}
+#     def get_user_applicant_details(self, obj):
+#         return{"user":obj.applicant_details.user.username, "is_job_seeker":obj.applicant_details.authentication.is_job_seeker, 
+#                "is_client":obj.applicant_details.authentication.is_client,"is_contractor":obj.applicant_details.authentication.is_contractor}
 
 class GetApplicationStatusSerializer(serializers.ModelSerializer):
 
@@ -33,3 +35,8 @@ class GetApplicationStatusSerializer(serializers.ModelSerializer):
             "user":obj.job_applicant.applicant_details.user.username,"is_job_seeker":obj.job_applicant.applicant_details.authentication.is_job_seeker, 
             "is_client":obj.job_applicant.applicant_details.authentication.is_client,"is_contractor":obj.job_applicant.applicant_details.authentication.is_contractor
         }
+    
+class GetUserProfessionalInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=UserProfessionalInfo
+        fields='__all__'

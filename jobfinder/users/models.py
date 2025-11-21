@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from authentication.models import BaseModelMixin, UserAuthentication
 from django.utils.timezone import now
 from company.models import *
-
+from multiselectfield import MultiSelectField
 class UserDesignation(BaseModelMixin):
     name = models.CharField(max_length=220, null=True, blank=True)
     tag = models.CharField(max_length=220, null=True, blank=True)
@@ -49,3 +49,38 @@ class EmployeeCompanyInfo(BaseModelMixin):
 
     def __str__(self):
         return self.user.first_name + "===="+str(self.id)+"========"+str(self.code)
+    
+class UserProfessionalInfo(BaseModelMixin):
+
+    DAY_CHOICES = [
+    ('mon', 'Monday'),
+    ('tue', 'Tuesday'),
+    ('wed', 'Wednesday'),
+    ('thu', 'Thursday'),
+    ('fri', 'Friday'),
+    ('sat', 'Saturday'),
+    ('sun', 'Sunday'),
+    ]
+
+    CATEGORY_CHOICES = [
+        ('weekday', 'Weekdays (Mon–Fri)'),
+        ('weekend', 'Weekend (Sat–Sun)'),
+        ('custom', 'Custom Days'),
+    ]
+    user_info=models.ForeignKey(EmployeeCompanyInfo, on_delete=models.CASCADE, blank=True, null=True)
+    Experience=models.IntegerField(default=0)
+    available_days_category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='weekday')
+    custom_days = MultiSelectField( choices=DAY_CHOICES, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        # Auto-fill days based on selected category
+        if self.available_days_category == "weekday":
+            self.custom_days = ['mon', 'tue', 'wed', 'thu', 'fri']
+        elif self.available_days_category == "weekend":
+            self.custom_days = ['sat', 'sun']
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.available_days_category} - {self.custom_days}"
+    rating=models.CharField(max_length=5, null=True, blank=True)
+    portfolio_photo = models.ImageField(upload_to='portfolio_photos/', null=True, blank=True)
