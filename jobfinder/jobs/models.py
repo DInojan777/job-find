@@ -74,5 +74,9 @@ class JobApplicationStatus(BaseModelMixin):
     job_applicant=models.ForeignKey(JobApplication, on_delete=models.CASCADE, null=True, blank=True)
     status=models.CharField(max_length=200,choices=APPLICANT_STATUS, null=True, blank=True, default='pending')
 
-
-
+class JobDetails(BaseModelMixin):
+    job=models.ForeignKey(Joblist, on_delete=models.CASCADE, null=True, blank=True)
+    jobApplicationStatus=models.ForeignKey(JobApplicationStatus, on_delete=models.CASCADE, null=True, blank=True)
+    work_start_date=models.DateTimeField(null=True, blank=True)
+    work_end_date=models.DateTimeField(null=True, blank=True)
+    payment_details=models.CharField(max_length=220, null=True, blank=True)

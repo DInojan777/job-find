@@ -4,5 +4,6 @@ from .models import *
 admin.site.register(UserDesignation)
 admin.site.register(UserPersonalInfo)
 admin.site.register(EmployeeCompanyInfo)
+admin.site.register(UserProfessionalInfo)
 
 
