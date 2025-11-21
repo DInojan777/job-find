@@ -298,7 +298,7 @@ class AddProtfolio(APIView):
 
         today = now().date()
         existing_count = UserProfessionalInfo.objects.filter(user_info__id=user_info_id, created_at__date=today).count()
-        
+
         if existing_count >= 2:
             return Response(get_validation_failure_response("You can only upload 2 photos per day."))
         
@@ -306,6 +306,6 @@ class AddProtfolio(APIView):
         if not uploaded_file:
             return Response(get_validation_failure_response('No image provided'))
         
-        profi = UserProfessionalInfo.objects.create(user_info_id=user_info_id, portfolio_photo=uploaded_file)
+        UserProfessionalInfo.objects.create(user_info_id=user_info_id, portfolio_photo=uploaded_file)
 
         return Response(get_success_response('protfolio uplode successfully'))

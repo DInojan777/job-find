@@ -68,9 +68,12 @@ class UserProfessionalInfo(BaseModelMixin):
         ('custom', 'Custom Days'),
     ]
     user_info=models.ForeignKey(EmployeeCompanyInfo, on_delete=models.CASCADE, blank=True, null=True)
+    skills=models.CharField(max_length=220, null=True, blank=True)
+    position=models.CharField(max_length=220, null=True, blank=True)
+    Description=models.TextField(null=True, blank=True)
     Experience=models.IntegerField(default=0)
-    available_days_category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='weekday')
-    custom_days = MultiSelectField( choices=DAY_CHOICES, blank=True, null=True)
+    available_days_category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    custom_days = MultiSelectField(choices=DAY_CHOICES, blank=True, null=True)
 
     def save(self, *args, **kwargs):
         # Auto-fill days based on selected category
